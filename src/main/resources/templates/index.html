@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org/">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="description" content="collection task">
+    <meta name="keywords" content="collection task">
+    <title>collection task</title>
+    <!-- Favicons-->
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+    <meta name="msapplication-TileImage" content="/images/favicon/mstile-144x144.png">
+    <link rel="icon" href="/images/favicon/favicon-32x32.png" sizes="32x32">
+    <!--  Android 5 Chrome Color-->
+    <meta name="theme-color" content="#EE6E73">
+    <!-- CSS-->
+    <link href="/css/prism.css" rel="stylesheet">
+    <link href="/css/ghpages-materialize.css" type="text/css" rel="stylesheet" media="screen,projection">
+    <link href="/css/materializecss-font.css" rel="stylesheet" type="text/css">
+    <style>
+        html, body, main {
+            height: 100%;
+        }
+
+        #navul li {
+            cursor: pointer;
+            font-weight: bold;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container"><a href="#" data-activates="nav-mobile"
+                              class="button-collapse top-nav waves-effect waves-light circle hide-on-large-only"><i
+            class="material-icons">menu</i></a></div>
+    <ul id="navul" class="side-nav fixed" style="">
+        <li class="bold" src="taskManage">任务开关</li>
+    </ul>
+</header>
+
+<main>
+    <iframe id="subpageiframe"
+            style="left:0;top:0;border:0;width:100%;height:100%;"
+            sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+            frameborder="0" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true"
+            scrolling="no" src="taskManage"></iframe>
+</main>
+
+<!--<footer class="page-footer">-->
+
+<!--</footer>-->
+
+<!--  Scripts-->
+<script src="/js/jquery-2.1.4.min.js"></script>
+<script src="/js/jquery.timeago.min.js"></script>
+<script src="/js/prism.js"></script>
+<script src="/js/lunr.min.js"></script>
+<script src="/js/search.js"></script>
+<script src="/js/materialize.js"></script>
+<script src="/js/init.js"></script>
+<script src="/js/ajax.js"></script>
+<script>
+
+    $("#navul li").each(function () {
+        $(this).click(function () {
+            $("#subpageiframe").attr("src", $(this).attr("src"));
+        })
+    })
+</script>
+
+</body>
+</html>
