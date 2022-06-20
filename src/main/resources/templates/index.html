@@ -26,7 +26,6 @@
         #navul li {
             cursor: pointer;
             font-weight: bold;
-            padding-left: 20px;
         }
     </style>
 </head>
@@ -36,7 +35,8 @@
                               class="button-collapse top-nav waves-effect waves-light circle hide-on-large-only"><i
             class="material-icons">menu</i></a></div>
     <ul id="navul" class="side-nav fixed" style="">
-        <li class="bold" src="taskManage">任务开关</li>
+        <li class="bold active" src="taskManage"><a class="collapsible-header  waves-effect waves-teal">任务开关</a></li>
+        <li class="bold" src="tasklist"><a class="collapsible-header  waves-effect waves-teal">任务列表</a></li>
     </ul>
 </header>
 
@@ -66,6 +66,8 @@
     $("#navul li").each(function () {
         $(this).click(function () {
             $("#subpageiframe").attr("src", $(this).attr("src"));
+            $("#navul li").removeClass("active");
+            $(this).addClass("active");
         })
     })
 </script>
