@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wh.business.collectiontask.mapper.TaskMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.wh.business.collectiontask.entity.TaskDO">
+        <id column="id" property="id" />
+        <result column="task_id" property="taskId" />
+        <result column="title" property="title" />
+        <result column="price" property="price" />
+        <result column="status" property="status" />
+        <result column="task_type" property="taskType" />
+        <result column="publish_datetime" property="publishDatetime" />
+        <result column="detail" property="detail" />
+        <result column="flag" property="flag" />
+        <result column="customer_contact" property="customerContact" />
+        <result column="platform" property="platform" />
+        <result column="url" property="url" />
+        <result column="create_datetime" property="createDatetime" />
+        <result column="update_datetime" property="updateDatetime" />
+        <result column="del" property="del" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, task_id, title, price, status, task_type, publish_datetime, detail, flag, customer_contact, platform, url, create_datetime, update_datetime, del
+    </sql>
+
+</mapper>
