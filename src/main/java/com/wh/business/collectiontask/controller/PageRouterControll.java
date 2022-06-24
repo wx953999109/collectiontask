@@ -1,4 +1,4 @@
-package com.wh.business.collectiontask.controll;
+package com.wh.business.collectiontask.controller;
 
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;

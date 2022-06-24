@@ -19,6 +19,15 @@
     <link href="/css/ghpages-materialize.css" type="text/css" rel="stylesheet" media="screen,projection">
     <link href="/css/materializecss-font.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="/css/taskManage.css">
+
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 开发环境版本，包含了有帮助的命令行警告 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <!-- 生产环境版本，优化了尺寸和速度 -->
+    <!--    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>-->
+
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <style>
         html, body, main {
             height: 100%;
@@ -36,18 +45,53 @@
 
 </header>
 
-<div>
+<div th:id="app">
     <nav>
         <div class="nav-wrapper">
             <ul id="navul" class="left hide-on-med-and-down">
-                <li data="a5"><a>A5</a></li>
-                <li data="zbj"><a>猪八戒</a></li>
-                <li data="ypwk"><a>一品威客</a></li>
+                <li data="a5" @click="platformClick('a5')"><a>A5</a></li>
+                <li data="zbj" @click="platformClick('zbj')"><a>猪八戒</a></li>
+                <li data="ypwk" @click="platformClick('ypwk')"><a>一品威客</a></li>
             </ul>
         </div>
     </nav>
-    <div id="test">
+    <div v-if="jobInfo && jobInfo.platform" :gutter="20">
+        <el-row class="row">
+            <el-col :span="4">
+                <div class="grid-content bg-purple">
+                    平台名称:{{jobInfo.platform}}
+                </div>
+            </el-col>
+        </el-row>
+        <el-row class="row">
+            <el-col :span="4">
+                <div class="grid-content bg-purple">
+                    任务状态:
+                    <el-switch
+                            v-model="jobInfo.running"
+                            @change="switchJob"
+                            active-color="#13ce66"
+                            inactive-color="#ff4949">
+                    </el-switch>
+                </div>
+            </el-col>
+        </el-row>
+        <el-row class="row">
+            <el-col :span="4">
+                <div class="grid-content bg-purple">
+                    {{ jobInfo.running == true ? '启动时间 :' : '停止时间' }}
+                    <span>{{ jobInfo.running ? jobInfo.startDateTime : jobInfo.stopDateTime }}</span>
 
+                </div>
+            </el-col>
+        </el-row>
+        <el-row class="row">
+            <el-col :span="4">
+                <div class="grid-content bg-purple">
+                    采集数量:{{jobInfo.collectionCount}}
+                </div>
+            </el-col>
+        </el-row>
     </div>
 </div>
 
@@ -65,16 +109,91 @@
 <script src="/js/init.js"></script>
 <script src="/js/ajax.js"></script>
 <script>
-    $("#navul li").each(function () {
-        $(this).click(function () {
-            let platfrom = $(this).attr("data");
-            POST("/taskStatus",
-                {
-                    platfrom: platfrom
-                }, (res) => {
-                    $("#test").html(res);
-                })
-        })
+
+</script>
+
+<script>
+    new Vue({
+        el: '#app',
+        components: {},
+        prop: {},
+        //这里存放数据
+        data() {
+            return {
+                value: true,
+                jobInfo: {},
+                show: false,
+            }
+        },
+        //计算属性 类似于 data 概念
+        computed: {},
+        //监控 data 中的数据变化
+        watch: {},
+        //方法集合
+        methods: {
+            switchJob() {
+                if (this.jobInfo.running) {
+                    this.startJob(this.jobInfo.platform);
+                } else {
+                    this.stopJob(this.jobInfo.platform);
+                }
+
+            },
+            platformClick(platform) {
+                this.jobInfo.platform = platform;
+                this.getJobStatus(platform);
+            },
+            getJobStatus(platform) {
+                POST("/job/getJobStatus",
+                    {
+                        platform: platform
+                    }, (res) => {
+                        this.jobInfo = res.data;
+                    })
+            },
+            startJob(platform) {
+                POST("/job/start",
+                    {
+                        platform: platform
+                    }, (res) => {
+                        console.log(res);
+                    })
+            },
+            stopJob(platform) {
+                POST("/job/stop",
+                    {
+                        platform: platform
+                    }, (res) => {
+                        console.log(res.data);
+
+                    })
+            }
+        },
+        //生命周期 - 创建完成（可以访问当前 this 实例）
+        created() {
+
+        },
+        //生命周期 - 挂载完成（可以访问 DOM 元素）
+        mounted() {
+            this.platformClick('a5');
+            setInterval(() => {
+                this.getJobStatus(this.jobInfo.platform);
+            }, 1000);
+        },
+        beforeCreate() {
+        },//生命周期 - 创建之前
+        beforeMount() {
+        },//生命周期 - 挂载之前
+        beforeUpload() {
+        },//生命周期 - 更新之前
+        updated() {
+        }, //生命周期 - 更新之后
+        beforeDestroy() {
+        }, //生命周期 - 销毁之前
+        destroyed() {
+        },//生命周期 - 销毁完成
+        activated() {
+        }, //如果页面有 keep-alive 缓存功能，这个函数会触发
     })
 </script>
 
