@@ -59,10 +59,10 @@ public class CodeGenerator {
                 .setBaseResultMap(true)
                 //不使用AR模式
                 .setActiveRecord(false)
-                //生成基本的SQL片段
-                .setBaseColumnList(true)
                 // 文件覆盖
-                .setFileOverride(true);
+//                .setFileOverride(true)
+                //生成基本的SQL片段
+                .setBaseColumnList(true);
 
         // gc.setSwagger2(true); 实体属性 Swagger2 注解
         mpg.setGlobalConfig(gc);

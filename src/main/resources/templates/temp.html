@@ -7,7 +7,7 @@
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="description" content="collection task">
     <meta name="keywords" content="collection task">
-    <title>collection task</title>
+    <title>tasklist</title>
     <!-- Favicons-->
     <meta name="msapplication-TileColor" content="#FFFFFF">
     <meta name="msapplication-TileImage" content="/images/favicon/mstile-144x144.png">
@@ -15,17 +15,25 @@
     <!--  Android 5 Chrome Color-->
     <meta name="theme-color" content="#EE6E73">
     <!-- CSS-->
-    <link href="/css/prism.css" rel="stylesheet">
-    <link href="/css/ghpages-materialize.css" type="text/css" rel="stylesheet" media="screen,projection">
-    <link href="/css/materializecss-font.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="/elementUI/css/elementUI.css">
 
-    <link rel="stylesheet" href="/elementUI/css/index.css">
-    <script src="/elementUI/js/index.js"></script>
-    <script src="/js/vueProduct.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 开发环境版本，包含了有帮助的命令行警告 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <!-- 生产环境版本，优化了尺寸和速度 -->
+    <!--    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>-->
 
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <style>
-        html, body, main{
+        html, body, main {
             height: 100%;
+        }
+
+        #navul li {
+            cursor: pointer;
+            font-weight: bold;
+            padding-left: 20px;
         }
     </style>
 </head>
@@ -34,9 +42,9 @@
 
 </header>
 
-<main>
+<div th:id="app">
 
-</main>
+</div>
 
 <!--<footer class="page-footer">-->
 
@@ -53,6 +61,50 @@
 <script src="/js/ajax.js"></script>
 <script>
 
+</script>
+
+<script>
+    new Vue({
+        el: '#app',
+        components: {},
+        prop: {},
+        //这里存放数据
+        data() {
+            return {
+
+            }
+        },
+        //计算属性 类似于 data 概念
+        computed: {},
+        //监控 data 中的数据变化
+        watch: {},
+        //方法集合
+        methods: {
+
+        },
+        //生命周期 - 创建完成（可以访问当前 this 实例）
+        created() {
+
+        },
+        //生命周期 - 挂载完成（可以访问 DOM 元素）
+        mounted() {
+
+        },
+        beforeCreate() {
+        },//生命周期 - 创建之前
+        beforeMount() {
+        },//生命周期 - 挂载之前
+        beforeUpload() {
+        },//生命周期 - 更新之前
+        updated() {
+        }, //生命周期 - 更新之后
+        beforeDestroy() {
+        }, //生命周期 - 销毁之前
+        destroyed() {
+        },//生命周期 - 销毁完成
+        activated() {
+        }, //如果页面有 keep-alive 缓存功能，这个函数会触发
+    })
 </script>
 
 </body>

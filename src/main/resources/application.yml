@@ -1,10 +1,19 @@
 spring:
+  jackson.date-format: yyyy-MM-dd HH:mm:ss
   datasource:
-    url: "jdbc:mysql://localhost:3306/collectiontask?useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false"
+    # 更换p6spy的驱动
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+    url: "jdbc:p6spy:mysql://localhost:3306/collectiontask?useAffectedRows=true&allowMultiQueries=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false"
     username: root  #数据库用户名，root为管理员
     password: root #该数据库用户的密码
     # 使用druid数据源
     type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 20
+      min-idle: 10
+      test-while-idle: true
+      validation-query: select 1
+      max-active: 100
   main:
     banner-mode: off
   thymeleaf:

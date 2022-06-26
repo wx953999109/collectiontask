@@ -7,7 +7,7 @@
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="description" content="collection task">
     <meta name="keywords" content="collection task">
-    <title>collection task</title>
+    <title>taskmanage</title>
     <!-- Favicons-->
     <meta name="msapplication-TileColor" content="#FFFFFF">
     <meta name="msapplication-TileImage" content="/images/favicon/mstile-144x144.png">
@@ -15,11 +15,7 @@
     <!--  Android 5 Chrome Color-->
     <meta name="theme-color" content="#EE6E73">
     <!-- CSS-->
-    <link href="/css/prism.css" rel="stylesheet">
-    <link href="/css/ghpages-materialize.css" type="text/css" rel="stylesheet" media="screen,projection">
-    <link href="/css/materializecss-font.css" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="/css/taskManage.css">
-
+    <link rel="stylesheet" href="/elementUI/css/elementUI.css">
     <!-- 引入样式 -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <!-- 开发环境版本，包含了有帮助的命令行警告 -->
@@ -59,14 +55,14 @@
         <el-row class="row">
             <el-col :span="4">
                 <div class="grid-content bg-purple">
-                    平台名称:{{jobInfo.platform}}
+                    平台名称 : {{jobInfo.platform}}
                 </div>
             </el-col>
         </el-row>
         <el-row class="row">
             <el-col :span="4">
                 <div class="grid-content bg-purple">
-                    任务状态:
+                    任务状态 :
                     <el-switch
                             v-model="jobInfo.running"
                             @change="switchJob"
@@ -79,7 +75,7 @@
         <el-row class="row">
             <el-col :span="4">
                 <div class="grid-content bg-purple">
-                    {{ jobInfo.running == true ? '启动时间 :' : '停止时间' }}
+                    {{ jobInfo.running == true ? '启动时间 : ' : '停止时间 : ' }}
                     <span>{{ jobInfo.running ? jobInfo.startDateTime : jobInfo.stopDateTime }}</span>
 
                 </div>
@@ -88,7 +84,14 @@
         <el-row class="row">
             <el-col :span="4">
                 <div class="grid-content bg-purple">
-                    采集数量:{{jobInfo.collectionCount}}
+                    采集数量 : {{jobInfo.collectionCount}}
+                </div>
+            </el-col>
+        </el-row>
+        <el-row class="row">
+            <el-col :span="4">
+                <div class="grid-content bg-purple">
+                    日志 : {{jobInfo.log}}
                 </div>
             </el-col>
         </el-row>

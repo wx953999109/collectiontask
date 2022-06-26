@@ -18,4 +18,9 @@ public class PageRouterControll {
     String taskManage(Model model){
         return  "taskManage";
     }
+
+    @GetMapping("tasklist")
+    String tasklist(Model model){
+        return  "tasklist";
+    }
 }

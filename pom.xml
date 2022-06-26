@@ -91,7 +91,7 @@
         <!-- druid依赖 -->
         <dependency>
             <groupId>com.alibaba</groupId>
-            <artifactId>druid</artifactId>
+            <artifactId>druid-spring-boot-starter</artifactId>
             <version>1.2.11</version>
         </dependency>
         <dependency>
@@ -105,9 +105,9 @@
             <version>3.4.0</version>
         </dependency>
         <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
-            <version>2.3.30</version>
+            <groupId>p6spy</groupId>
+            <artifactId>p6spy</artifactId>
+            <version>3.8.2</version>
         </dependency>
     </dependencies>
     <dependencyManagement>
@@ -132,12 +132,12 @@
                     <fork>true</fork>
                     <arguments>-Dfile.encoding=UTF-8</arguments>
                     <addResources>true</addResources>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
+<!--                    <excludes>-->
+<!--                        <exclude>-->
+<!--                            <groupId>org.projectlombok</groupId>-->
+<!--                            <artifactId>lombok</artifactId>-->
+<!--                        </exclude>-->
+<!--                    </excludes>-->
                 </configuration>
             </plugin>
         </plugins>

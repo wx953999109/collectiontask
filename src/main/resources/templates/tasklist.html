@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org/">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="description" content="collection task">
+    <meta name="keywords" content="collection task">
+    <title>tasklist</title>
+    <!-- Favicons-->
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+    <meta name="msapplication-TileImage" content="/images/favicon/mstile-144x144.png">
+    <link rel="icon" href="/images/favicon/favicon-32x32.png" sizes="32x32">
+    <!--  Android 5 Chrome Color-->
+    <meta name="theme-color" content="#EE6E73">
+    <!-- CSS-->
+
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 开发环境版本，包含了有帮助的命令行警告 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <!-- 生产环境版本，优化了尺寸和速度 -->
+    <!--    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>-->
+
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <link rel="stylesheet" href="elementUI/css/elementUIDocs.css">
+    <style>
+        html, body, main {
+            height: 100%;
+        }
+
+        #navul li {
+            cursor: pointer;
+            font-weight: bold;
+            padding-left: 20px;
+        }
+
+
+    </style>
+</head>
+<body>
+<header>
+
+</header>
+
+<div th:id="app" style="height: 100%">
+    <el-table
+            :data="page.records"
+            style="width: 100%"
+            height="95%">
+        <el-table-column
+                fixed
+                prop="index"
+                label="#"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                fixed
+                prop="id"
+                label="id"
+                width="100">
+        </el-table-column>
+        <el-table-column
+                prop="title"
+                label="标题"
+                width="500">
+        </el-table-column>
+        <el-table-column
+                prop="price"
+                label="价格"
+                width="120">
+        </el-table-column>
+        <el-table-column
+                prop="status"
+                label="状态"
+                width="120">
+        </el-table-column>
+        <!--        <el-table-column-->
+        <!--                prop="taskType"-->
+        <!--                label="任务类型"-->
+        <!--                width="100">-->
+        <!--        </el-table-column>-->
+        <el-table-column
+                prop="publishDatetime"
+                label="发布日期"
+                width="120">
+        </el-table-column>
+        <!--        <el-table-column-->
+        <!--                prop="detail"-->
+        <!--                :formatter="taskDetailFormatter"-->
+        <!--                label="任务详细"-->
+        <!--                width="150">-->
+        <!--        </el-table-column>-->
+        <el-table-column
+                prop="flag"
+                label="标记"
+                width="120">
+        </el-table-column>
+        <el-table-column
+                prop="remark"
+                label="备注"
+                width="120">
+        </el-table-column>
+        <el-table-column
+                prop="customerContact"
+                label="客户联系方式"
+                width="120">
+        </el-table-column>
+        <el-table-column
+                prop="platform"
+                label="平台"
+                width="120">
+        </el-table-column>
+        <el-table-column
+                prop="url"
+                label="url"
+                width="80">
+            <template slot-scope="scope">
+                <el-tooltip class="item" effect="dark" :content="scope.row.url" placement="top-start">
+                    <a target="_blank" :href='scope.row.url'><i class="el-icon-link"></i></a>
+                </el-tooltip>
+            </template>
+        </el-table-column>
+        <!--        <el-table-column-->
+        <!--                prop="createDatetime"-->
+        <!--                label="入库日期"-->
+        <!--                width="120">-->
+        <!--        </el-table-column>-->
+        <!--        <el-table-column-->
+        <!--                prop="updateDatetime"-->
+        <!--                label="更新日期"-->
+        <!--                width="120">-->
+        <!--        </el-table-column>-->
+        <el-table-column
+                fixed="right"
+                label="操作"
+                width="100">
+            <template slot-scope="scope">
+                <el-button @click="viewDetailTaskDrawer(scope.row)" type="text" size="small">查看</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="page.current"
+            :page-sizes="[8, 10, 20, 30]"
+            :page-size="page.size"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="page.total">
+    </el-pagination>
+
+    <el-drawer
+            title="任务详细"
+            :visible.sync="detailDrawerVisible"
+            direction="ltr"
+            custom-class="demo-drawer demo-layout"
+            ref="drawer"
+            size="80%"
+    >
+        <div class="demo-drawer__content">
+            <el-form :model="detailTaskData" label-position="left" label-width="80px" size="mini">
+                <el-row :gutter="20">
+                    <el-col :span="24">
+                        <div class="grid-content bg-purple">{{'标题: ' + detailTaskData.title}}</div>
+                    </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                    <el-col :span="8">
+                        <div class="grid-content bg-purple">{{'#: ' + detailTaskData.index}}</div>
+                    </el-col>
+                    <el-col :span="8">
+                        <div class="grid-content bg-purple">{{'ID: ' + detailTaskData.id}}</div>
+                    </el-col>
+                    <el-col :span="8">
+                        <div class="grid-content bg-purple">{{'价格: ' + detailTaskData.price}}</div>
+                    </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                    <el-col :span="8">
+                        <div class="grid-content bg-purple">{{'状态: ' + detailTaskData.status}}</div>
+                    </el-col>
+                    <el-col :span="8">
+                        <div class="grid-content bg-purple">{{'类型: ' + detailTaskData.taskType}}</div>
+                    </el-col>
+                    <el-col :span="8">
+                        <div class="grid-content bg-purple">{{'发布日期: ' + detailTaskData.publishDatetime}}</div>
+                    </el-col>
+                </el-row>
+
+                <el-row :gutter="20">
+                    <el-col :span="24">
+                        <div class="grid-content bg-purple">{{'任务详细url: ' + detailTaskData.url}}</div>
+                    </el-col>
+                </el-row>
+
+                <el-row :gutter="20">
+                    <el-col :span="8">
+                        <div class="grid-content bg-purple">{{'来源平台: ' + detailTaskData.platform}}</div>
+                    </el-col>
+                    <el-col :span="8">
+                        <div class="grid-content bg-purple">{{'任务入库日期: ' + detailTaskData.createDatetime}}</div>
+                    </el-col>
+                    <el-col :span="8">
+                        <div class="grid-content bg-purple">{{'数据更新日期: ' + detailTaskData.updateDatetime}}</div>
+                    </el-col>
+                </el-row>
+
+                <el-row :gutter="20">
+                    <el-col :span="24">
+                        <div class="grid-content bg-purple">{{'详细需求: ' + detailTaskData.detail}}</div>
+                    </el-col>
+                </el-row>
+
+                <el-form-item label="我的标记" prop="flag">
+                    <el-select v-model="detailTaskData.flag" placeholder="我的标记">
+                        <el-option label="a" value="0"></el-option>
+                        <el-option label="b" value="1"></el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item label="联系方式" prop="customerContact">
+                    <el-input v-model.number="detailTaskData.customerContact"></el-input>
+                </el-form-item>
+
+                <el-form-item label="备注" prop="remark">
+                    <el-input v-model.number="detailTaskData.remark"></el-input>
+                </el-form-item>
+            </el-form>
+            <div class="demo-drawer__footer">
+                <el-button @click="cancelDetailDrawer">取 消</el-button>
+                <el-button type="primary" @click="saveData" :loading="detailSubmitButtonLoading">
+                    {{ detailSubmitButtonLoading ? '提交中 ...' : '确 定' }}
+                </el-button>
+            </div>
+        </div>
+    </el-drawer>
+</div>
+
+<!--<footer class="page-footer">-->
+
+<!--</footer>-->
+
+<!--  Scripts-->
+<script src="/js/jquery-2.1.4.min.js"></script>
+<script src="/js/jquery.timeago.min.js"></script>
+<script src="/js/prism.js"></script>
+<script src="/js/lunr.min.js"></script>
+<script src="/js/search.js"></script>
+<script src="/js/materialize.js"></script>
+<script src="/js/init.js"></script>
+<script src="/js/ajax.js"></script>
+<script>
+
+</script>
+
+<script>
+    new Vue({
+        el: '#app',
+        components: {},
+        prop: {},
+        //这里存放数据
+        data() {
+            return {
+                page: {
+                    current: 1,
+                    total: 0,
+                    size: 8,
+                    records: []
+                },
+                detailDrawerVisible: false,
+                detailSubmitButtonLoading: false,
+                detailTaskData: {},
+            }
+        },
+        //计算属性 类似于 data 概念
+        computed: {},
+        //监控 data 中的数据变化
+        watch: {},
+        //方法集合
+        methods: {
+            //分页查询数据
+            pageData() {
+                this.page.records = null;
+                POST("/task/page", this.page, (res) => {
+                    let data = res.data;
+                    if (data && data.records && data.records.length > 0) {
+                        for (let i = 0; i < data.records.length; i++) {
+                            data.records[i].index = i + 1 + (data.current - 1) * data.size;
+                        }
+                    }
+                    console.log(data)
+                    this.page = data;
+                })
+            },
+            //每页显示数量改变
+            handleSizeChange(val) {
+                this.page.size = val;
+                this.pageData();
+            },
+            //改变页码
+            handleCurrentChange(val) {
+                this.page.current = val;
+                this.pageData();
+            },
+
+            //显示详细任务数据
+            viewDetailTaskDrawer(task) {
+                this.detailDrawerVisible = true;
+                this.detailTaskData = task;
+                console.log(task)
+            },
+            //保存数据
+            saveData() {
+                if (this.detailSubmitButtonLoading) {
+                    return;
+                }
+                this.$confirm('确定要提交表单吗？')
+                    .then(_ => {
+                        this.loading = true;
+                        this.timer = setTimeout(() => {
+                            done();
+                            // 动画关闭需要一定的时间
+                            setTimeout(() => {
+                                this.loading = false;
+                            }, 400);
+                        }, 2000);
+                    })
+                    .catch(_ => {
+                    });
+            },
+            //任务详细抽屉关闭事件
+            handleDetailDrawerClose(done) {
+                this.detailDrawerVisible = false;
+            },
+            //关闭详细抽屉
+            cancelDetailDrawer() {
+                this.detailDrawerVisible = false;
+            }
+        },
+        //生命周期 - 创建完成（可以访问当前 this 实例）
+        created() {
+
+        },
+        //生命周期 - 挂载完成（可以访问 DOM 元素）
+        mounted() {
+            this.pageData();
+        },
+        beforeCreate() {
+        },//生命周期 - 创建之前
+        beforeMount() {
+        },//生命周期 - 挂载之前
+        beforeUpload() {
+        },//生命周期 - 更新之前
+        updated() {
+        }, //生命周期 - 更新之后
+        beforeDestroy() {
+        }, //生命周期 - 销毁之前
+        destroyed() {
+        },//生命周期 - 销毁完成
+        activated() {
+        }, //如果页面有 keep-alive 缓存功能，这个函数会触发
+    })
+</script>
+
+</body>
+</html>

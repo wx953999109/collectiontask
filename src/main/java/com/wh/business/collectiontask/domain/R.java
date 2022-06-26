@@ -19,6 +19,10 @@ public class R {
         this.msg = msg;
     }
 
+    public static R success(Object data) {
+        return new R(200, data, "ok");
+    }
+
     public static R success(Object data, String msg) {
         return new R(200, data, msg);
     }

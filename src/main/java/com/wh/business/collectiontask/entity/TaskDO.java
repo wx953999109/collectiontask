@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import java.util.Date;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -74,6 +76,11 @@ public class TaskDO implements Serializable {
     private Integer flag;
 
     /**
+     * 备注
+     */
+    private String remark;
+
+    /**
      * 客户联系方式
      */
     private String customerContact;
@@ -91,11 +98,13 @@ public class TaskDO implements Serializable {
     /**
      * 任务入库日期
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createDatetime;
 
     /**
      * 数据更新日期
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateDatetime;
 
     /**

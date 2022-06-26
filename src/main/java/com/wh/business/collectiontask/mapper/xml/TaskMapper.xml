@@ -13,6 +13,7 @@
         <result column="publish_datetime" property="publishDatetime" />
         <result column="detail" property="detail" />
         <result column="flag" property="flag" />
+        <result column="remark" property="remark" />
         <result column="customer_contact" property="customerContact" />
         <result column="platform" property="platform" />
         <result column="url" property="url" />
@@ -23,7 +24,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, task_id, title, price, status, task_type, publish_datetime, detail, flag, customer_contact, platform, url, create_datetime, update_datetime, del
+        id, task_id, title, price, status, task_type, publish_datetime, detail, flag, remark, customer_contact, platform, url, create_datetime, update_datetime, del
     </sql>
 
 </mapper>

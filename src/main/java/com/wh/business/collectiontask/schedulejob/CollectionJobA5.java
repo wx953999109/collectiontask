@@ -1,8 +1,6 @@
 package com.wh.business.collectiontask.schedulejob;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.wh.business.collectiontask.controller.TaskManageControll;
 import com.wh.business.collectiontask.domain.IMyRunnable;
 import com.wh.business.collectiontask.domain.JobInfo;
@@ -14,19 +12,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.quartz.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -47,7 +40,7 @@ public class CollectionJobA5 implements Job {
         dataSourceTransactionManager = (DataSourceTransactionManager) ApplicationContextUtils.getBean(DataSourceTransactionManager.class);
     }
 
-    int delay = 2000;
+    int delay = 3000;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -60,7 +53,8 @@ public class CollectionJobA5 implements Job {
 
         String platform = jobDetailMap.getString("platform");
         jobInfo = TaskManageControll.jobs.get(platform);
-
+        jobInfo.setCollectionCount(0);
+        jobInfo.setRunning(true);
         try {
             //读取任务列表页数
             jobInfo.setLog("读取页数");
@@ -134,24 +128,25 @@ public class CollectionJobA5 implements Job {
                         //客户联系方式
                         //任务发布日期
                         taskDO.setPublishDatetime((doc.select(".m-detail-item span:nth-child(2)").get(0).text() + "").trim().replace("发布于", ""));
+
+                        //查询已经存在的任务
+                        LambdaQueryWrapper<TaskDO> wrapper = new LambdaQueryWrapper<TaskDO>();
+                        wrapper.eq(true, TaskDO::getTaskId, taskDO.getTaskId());
+                        TaskDO existsTask = taskService.getOne(wrapper);
+                        if (existsTask != null) {
+                            //更新
+                            taskDO.setId(existsTask.getId());
+                            taskService.updateById(taskDO);
+                        } else {
+                            //新增
+                            taskService.save(taskDO);
+                        }
+                        jobInfo.setCollectionCount(jobInfo.getCollectionCount() + 1);
+                        //dataSourceTransactionManager.commit(transactionStatus);
                     } catch (Exception exception) {
-                        taskDO.setStatus("读取异常");
-                        taskDO.setDetail(exception.toString());
-                        taskService.save(taskDO);
+
                     }
-                    //查询已经存在的任务
-                    LambdaQueryWrapper<TaskDO> wrapper = new LambdaQueryWrapper<TaskDO>();
-                    wrapper.eq(true, TaskDO::getTaskId, taskDO.getTaskId());
-                    TaskDO existsTask = taskService.getOne(wrapper);
-                    if (existsTask != null) {
-                        //更新
-                        taskDO.setId(existsTask.getId());
-                        taskService.updateById(taskDO);
-                    } else {
-                        //新增
-                        taskService.save(taskDO);
-                    }
-                    //dataSourceTransactionManager.commit(transactionStatus);
+
                 }
             };
             scheduExec.schedule(task.setParam(taskList.get(i)), delay, TimeUnit.MILLISECONDS).get();

@@ -1,5 +1,6 @@
 package com.wh.business.collectiontask;
 
+import com.p6spy.engine.spy.appender.MessageFormattingStrategy;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;

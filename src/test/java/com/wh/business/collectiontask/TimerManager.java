@@ -27,7 +27,8 @@ public class TimerManager {
     public ScheduledFuture<String> timerOne() throws Exception {
         return scheduExec.schedule(() -> {
 
-            System.out.println("timerOne invoked .....");
+            System.out.println(System.getProperty("file.encoding"));
+            System.out.println("timerOne 调用 .....");
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
@@ -42,13 +43,15 @@ public class TimerManager {
         scheduExec.schedule(new Runnable() {
             public void run() {
 
-                System.out.println("timerTwo invoked .....");
+                System.out.println(System.getProperty("file.encoding"));
+                System.out.println("timerTwo 调用 .....");
             }
         }, 1000, TimeUnit.MILLISECONDS);
 
     }
 
     public static void main(String[] args) throws Exception {
+        System.out.println(System.getProperty("file.encoding"));
         TimerManager test = new TimerManager();
         test.timerOne();
         test.timerTwo();
