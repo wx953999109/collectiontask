@@ -7,7 +7,6 @@ import com.wh.business.collectiontask.domain.JobInfo;
 import com.wh.business.collectiontask.entity.TaskDO;
 import com.wh.business.collectiontask.service.TaskService;
 import com.wh.business.collectiontask.util.ApplicationContextUtils;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,7 +14,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.quartz.*;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.scheduling.quartz.DelegatingJob;
 import org.springframework.transaction.TransactionDefinition;
 
 import java.math.BigDecimal;
@@ -30,21 +28,20 @@ import java.util.concurrent.TimeUnit;
 @Log4j2
 public class CollectionJobA5 implements InterruptableJob {
 
-    final String Host = "https://www.a5.cn/";
-    List<String> taskList = new ArrayList<String>();
+    final String host = "https://www.a5.cn/";
     JobInfo jobInfo;
     TaskService taskService;
     ScheduledExecutorService scheduExec = Executors.newScheduledThreadPool(1);
     private DataSourceTransactionManager dataSourceTransactionManager;
     private TransactionDefinition transactionDefinition;
 
+    int delay = 5000;
+
     CollectionJobA5() {
         taskService = (TaskService) ApplicationContextUtils.getBean(TaskService.class);
         transactionDefinition = (TransactionDefinition) ApplicationContextUtils.getBean(TransactionDefinition.class);
         dataSourceTransactionManager = (DataSourceTransactionManager) ApplicationContextUtils.getBean(DataSourceTransactionManager.class);
     }
-
-    int delay = 3000;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -59,24 +56,22 @@ public class CollectionJobA5 implements InterruptableJob {
         jobInfo = TaskManageControll.jobs.get(platform);
         jobInfo.setCollectionCount(0);
         jobInfo.setRunning(true);
+
         try {
             //读取任务列表页数
             jobInfo.setLog("读取页数");
-            Document doc = Jsoup.connect(Host + "tasklist-o-1-page-1.html").get();
+            Document doc = Jsoup.connect(host + "tasklist-o-1-page-1.html").get();
             Elements tmpLis = doc.select(".m-page-nums .pagination li");
             int pageCount = Integer.parseInt(tmpLis.get(tmpLis.size() - 2).text());
             for (int pageIndex = 1; pageIndex <= pageCount; pageIndex++) {
                 jobInfo.setLog("加载第" + pageIndex + "页数据");
                 //过会再访问
                 Thread.sleep(delay);
-                ReadTaskList(Host + "tasklist-o-1-page-" + pageIndex + ".html");
+                List<String> list = ReadTaskList(host + "tasklist-o-1-page-" + pageIndex + ".html");
+                //读取当前页所有任务详细数据
+                ReadDetailRead(pageIndex, pageCount, list);
             }
-
-            jobInfo.setLog("读取所有任务详细数据");
-            //过会再访问
-            Thread.sleep(delay);
-            //读取所有任务详细数据
-            ReadDetailRead();
+            jobInfo.setLog("全部读取完毕, 等待重新开始");
         } catch (Exception ex) {
             log.error(ex);
         }
@@ -88,17 +83,18 @@ public class CollectionJobA5 implements InterruptableJob {
      * @param url
      * @throws Exception
      */
-    void ReadTaskList(String url) throws Exception {
+    List<String> ReadTaskList(String url) throws Exception {
+        List<String> list = new ArrayList<String>();
         Document doc = Jsoup.connect(url).get();
 
         Elements links = doc.selectFirst(".m-tk-list").select("h3 a");
-        if (links.size() == 0) return;
         for (Element link : links) {
             String path = link.attr("href").toString();
-            String detailTaskUrl = Host + path;
+            String detailTaskUrl = host + path;
             //将任务详细页面的链接存放到集合里面
-            taskList.add(detailTaskUrl);
+            list.add(detailTaskUrl);
         }
+        return list;
     }
 
     /**
@@ -106,9 +102,9 @@ public class CollectionJobA5 implements InterruptableJob {
      *
      * @throws Exception
      */
-    private void ReadDetailRead() throws Exception {
-        for (int i = 0; i < taskList.size(); i++) {
-            jobInfo.setLog("加载任务详细, 第" + (i + 1) + "个/" + taskList.size());
+    private void ReadDetailRead(int pageNumber, int pageCount, List<String> listUrl) throws Exception {
+        for (int i = 0; i < listUrl.size(); i++) {
+            jobInfo.setLog("加载任务详细, 第" + pageNumber + "/" + pageCount + "页, " + (i + 1) + "/" + listUrl.size() + "个");
             IMyRunnable<String> task = new IMyRunnable<String>() {
                 String detailTaskUrl;
 
@@ -155,7 +151,8 @@ public class CollectionJobA5 implements InterruptableJob {
 
                         //查询已经存在的任务
                         LambdaQueryWrapper<TaskDO> wrapper = new LambdaQueryWrapper<TaskDO>();
-                        wrapper.eq(true, TaskDO::getTaskId, taskDO.getTaskId());
+                        wrapper.eq(TaskDO::getTaskId, taskDO.getTaskId());
+                        wrapper.eq(TaskDO::getPlatform, taskDO.getPlatform());
                         TaskDO existsTask = taskService.getOne(wrapper);
                         if (existsTask != null) {
                             //更新
@@ -175,7 +172,7 @@ public class CollectionJobA5 implements InterruptableJob {
 
                 }
             };
-            scheduExec.schedule(task.setParam(taskList.get(i)), delay, TimeUnit.MILLISECONDS).get();
+            scheduExec.schedule(task.setParam(listUrl.get(i)), delay, TimeUnit.MILLISECONDS).get();
         }
     }
 

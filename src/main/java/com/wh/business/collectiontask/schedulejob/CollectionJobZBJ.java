@@ -30,21 +30,20 @@ import java.util.stream.Collectors;
 @Log4j2
 public class CollectionJobZBJ implements InterruptableJob {
 
-    final String Host = "https://task.zbj.com/";
-    List<String> taskList = new ArrayList<String>();
+    final String host = "https://task.zbj.com/";
     JobInfo jobInfo;
     TaskService taskService;
     ScheduledExecutorService scheduExec = Executors.newScheduledThreadPool(1);
     private DataSourceTransactionManager dataSourceTransactionManager;
     private TransactionDefinition transactionDefinition;
 
+    int delay = 5000;
+
     CollectionJobZBJ() {
         taskService = (TaskService) ApplicationContextUtils.getBean(TaskService.class);
         transactionDefinition = (TransactionDefinition) ApplicationContextUtils.getBean(TransactionDefinition.class);
         dataSourceTransactionManager = (DataSourceTransactionManager) ApplicationContextUtils.getBean(DataSourceTransactionManager.class);
     }
-
-    int delay = 3000;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -62,21 +61,17 @@ public class CollectionJobZBJ implements InterruptableJob {
         try {
             //读取任务列表页数
             jobInfo.setLog("读取页数");
-            Document doc = Jsoup.connect(Host + "page1.html").get();
+            Document doc = Jsoup.connect(host + "page1.html").get();
             int pageCount = Integer.parseInt(Objects.requireNonNull(doc.selectFirst("[data-linkid=task-list-to-page-last]")).text());
-            //todo
             for (int pageIndex = 1; pageIndex <= pageCount; pageIndex++) {
                 jobInfo.setLog("加载第" + pageIndex + "页数据");
                 //过会再访问
                 Thread.sleep(delay);
-                ReadTaskList(Host + "page" + pageIndex + ".html");
+                List<String> list = ReadTaskList(host + "page" + pageIndex + ".html");
+                //读取当前页所有任务详细数据
+                ReadDetailRead(pageIndex, pageCount, list);
             }
-
-            jobInfo.setLog("读取所有任务详细数据");
-            //过会再访问
-            Thread.sleep(delay);
-            //读取所有任务详细数据
-            ReadDetailRead();
+            jobInfo.setLog("全部读取完毕, 等待重新开始");
         } catch (Exception ex) {
             System.out.println(ex);
             log.error(ex);
@@ -89,19 +84,20 @@ public class CollectionJobZBJ implements InterruptableJob {
      * @param url
      * @throws Exception
      */
-    void ReadTaskList(String url) throws Exception {
+    List<String> ReadTaskList(String url) throws Exception {
+        List<String> list = new ArrayList<String>();
         Document doc = Jsoup.connect(url).get();
 
         Elements links = doc.select(".go-to-detail");
-        if (links.size() == 0) return;
         for (Element link : links) {
             String detailTaskUrl = link.attr("href");
             if (!detailTaskUrl.startsWith("http")) {
                 detailTaskUrl = "https:" + detailTaskUrl;
             }
             //将任务详细页面的链接存放到集合里面
-            taskList.add(detailTaskUrl);
+            list.add(detailTaskUrl);
         }
+        return list;
     }
 
     /**
@@ -109,9 +105,9 @@ public class CollectionJobZBJ implements InterruptableJob {
      *
      * @throws Exception
      */
-    private void ReadDetailRead() throws Exception {
-        for (int i = 0; i < taskList.size(); i++) {
-            jobInfo.setLog("加载任务详细, 第" + (i + 1) + "个/" + taskList.size());
+    private void ReadDetailRead(int pageNumber, int pageCount, List<String> listUrl) throws Exception {
+        for (int i = 0; i < listUrl.size(); i++) {
+            jobInfo.setLog("加载任务详细, 第" + pageNumber + "/" + pageCount + "页, " + (i + 1) + "/" + listUrl.size() + "个");
             IMyRunnable<String> task = new IMyRunnable<String>() {
                 String detailTaskUrl;
 
@@ -171,7 +167,8 @@ public class CollectionJobZBJ implements InterruptableJob {
 
                         //查询已经存在的任务
                         LambdaQueryWrapper<TaskDO> wrapper = new LambdaQueryWrapper<TaskDO>();
-                        wrapper.eq(true, TaskDO::getTaskId, taskDO.getTaskId());
+                        wrapper.eq(TaskDO::getTaskId, taskDO.getTaskId());
+                        wrapper.eq(TaskDO::getPlatform, taskDO.getPlatform());
                         TaskDO existsTask = taskService.getOne(wrapper);
                         if (existsTask != null) {
                             //更新
@@ -192,7 +189,7 @@ public class CollectionJobZBJ implements InterruptableJob {
 
                 }
             };
-            scheduExec.schedule(task.setParam(taskList.get(i)), delay, TimeUnit.MILLISECONDS).get();
+            scheduExec.schedule(task.setParam(listUrl.get(i)), delay, TimeUnit.MILLISECONDS).get();
         }
     }
 
