@@ -12,6 +12,7 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * <p>
@@ -99,12 +100,14 @@ public class TaskDO implements Serializable {
      * 任务入库日期
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createDatetime;
 
     /**
      * 数据更新日期
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateDatetime;
 
     /**

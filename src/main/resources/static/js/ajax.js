@@ -1,13 +1,19 @@
-window.POST = function (url, data, success) {
+window.POST = function (option) {
     $.ajax({
         type: "POST",
-        url,
-        data,
+        url: option.url,
+        data: option.data,
         beforeSend: function (request) {
             request.setRequestHeader("content-Type", "application/x-www-form-urlencoded");
         },
         success: function (result) {
-            success(result);
+            if (result && result.code === 200) {
+                option.success && option.success(result);
+                option.finally && option.finally(result);
+            } else {
+                option.fail && option.fail(result);
+                option.finally && option.finally(result);
+            }
         }
     });
 }

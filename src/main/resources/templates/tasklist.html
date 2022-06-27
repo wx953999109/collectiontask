@@ -41,7 +41,6 @@
 </head>
 <body>
 <header>
-
 </header>
 
 <div th:id="app" style="height: 100%">
@@ -191,7 +190,9 @@
 
                 <el-row :gutter="20">
                     <el-col :span="24">
-                        <div class="grid-content bg-purple">{{'任务详细url: ' + detailTaskData.url}}</div>
+                        <div class="grid-content bg-purple">{{'任务详细url: '}}
+                            <a target="_blank" :href="detailTaskData.url">{{detailTaskData.url}}</a>
+                        </div>
                     </el-col>
                 </el-row>
 
@@ -215,8 +216,8 @@
 
                 <el-form-item label="我的标记" prop="flag">
                     <el-select v-model="detailTaskData.flag" placeholder="我的标记">
-                        <el-option label="a" value="0"></el-option>
-                        <el-option label="b" value="1"></el-option>
+                        <el-option label="a" :value="0"></el-option>
+                        <el-option label="b" :value="1"></el-option>
                     </el-select>
                 </el-form-item>
 
@@ -263,6 +264,7 @@
         //这里存放数据
         data() {
             return {
+                activeNavIndex: '1',
                 page: {
                     current: 1,
                     total: 0,
@@ -283,15 +285,18 @@
             //分页查询数据
             pageData() {
                 this.page.records = null;
-                POST("/task/page", this.page, (res) => {
-                    let data = res.data;
-                    if (data && data.records && data.records.length > 0) {
-                        for (let i = 0; i < data.records.length; i++) {
-                            data.records[i].index = i + 1 + (data.current - 1) * data.size;
+                POST({
+                    url: "/task/page"
+                    , data: this.page
+                    , finally: (res) => {
+                        let data = res.data;
+                        if (data && data.records && data.records.length > 0) {
+                            for (let i = 0; i < data.records.length; i++) {
+                                data.records[i].index = i + 1 + (data.current - 1) * data.size;
+                            }
                         }
+                        this.page = data;
                     }
-                    console.log(data)
-                    this.page = data;
                 })
             },
             //每页显示数量改变
@@ -308,7 +313,6 @@
             viewDetailTaskDrawer(task) {
                 this.detailDrawerVisible = true;
                 this.detailTaskData = task;
-                console.log(task)
             },
             //保存数据
             saveData() {
@@ -317,14 +321,19 @@
                 }
                 this.$confirm('确定要提交表单吗？')
                     .then(_ => {
-                        this.loading = true;
-                        this.timer = setTimeout(() => {
-                            done();
-                            // 动画关闭需要一定的时间
-                            setTimeout(() => {
-                                this.loading = false;
-                            }, 400);
-                        }, 2000);
+                        this.detailSubmitButtonLoading = true;
+                        POST({
+                            url: "/task/saveTask"
+                            , data: this.detailTaskData
+                            , finally: (res) => {
+                                console.log(res.msg);
+                                this.detailDrawerVisible = false;
+                                this.detailSubmitButtonLoading = false;
+                            },
+                            success: (res) => {
+                                this.pageData();
+                            }
+                        });
                     })
                     .catch(_ => {
                     });

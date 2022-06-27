@@ -19,12 +19,20 @@ public class R {
         this.msg = msg;
     }
 
+    public static R success() {
+        return new R(200, null, "ok");
+    }
+
     public static R success(Object data) {
         return new R(200, data, "ok");
     }
 
     public static R success(Object data, String msg) {
         return new R(200, data, msg);
+    }
+
+    public static R error() {
+        return new R(400, null, "fail");
     }
 
     public static R error(Object data, String msg) {

@@ -49,6 +49,10 @@ public class TaskManageControll {
         Assert.isTrue(Arrays.asList(platforms).contains(platform), "平台代码错误");
 
         JobInfo jobInfo = jobs.get(platform);
+        //因为任务job内部也有线程, 部分线程无法立即结束掉, 会出现日志滞后, 所以这里把日志内容固定为已停止
+        if (!jobInfo.isRunning()) {
+            jobInfo.setLog("已停止");
+        }
         return R.success(jobInfo, "获取任务状态成功");
     }
 
@@ -71,7 +75,7 @@ public class TaskManageControll {
             jobDetail = JobBuilder.newJob(jobClass)
                     .withIdentity(platform, defaultGroup)
                     .usingJobData("platform", platform)
-                    .requestRecovery(true)  //job可恢复，在其执行的时候，scheduler发生硬关闭，则当scheduler重新启动的时候，该job会被重新执行，此时，该job的JobExecutionContext.isRecovering()返回true
+                    .requestRecovery(false)  //job可恢复，在其执行的时候，scheduler发生硬关闭，则当scheduler重新启动的时候，该job会被重新执行，此时，该job的JobExecutionContext.isRecovering()返回true
                     .build();
 
             Trigger trigger = TriggerBuilder.newTrigger()
@@ -96,7 +100,9 @@ public class TaskManageControll {
         JobInfo jobInfo = jobs.get(platform);
         jobInfo.setRunning(false);
         if (jobDetail != null) {
+            scheduler.interrupt(jobKey);
             scheduler.deleteJob(jobKey);
+            jobInfo.setLog("已停止");
             return R.success(jobInfo, "已停止");
         } else {
             return R.error("任务不存在");

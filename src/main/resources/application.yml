@@ -54,7 +54,7 @@ server:
 mybatis:
   config-location: classpath:mybatis.cfg.xml    #  mybatis主配置文件所在路径
   type-aliases-package: com.wh.business.collectiontask  #  定义所有操作类的别名所在包
-  mapper-locations:                                     #  所有的mapper映射文件
+  mapper-locations: #  所有的mapper映射文件
     - classpath:mapper/*.xml
 
 # mybatis-plus相关配置
@@ -80,3 +80,9 @@ mybatis-plus:
     call-setters-on-nulls: false
     # 这个配置会将执行的sql打印出来，在开发或测试的时候可以用
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    root: INFO
+  file:
+    name: "logs/log.log"

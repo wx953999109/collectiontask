@@ -41,16 +41,13 @@
 
 </header>
 
-<div th:id="app">
-    <nav>
-        <div class="nav-wrapper">
-            <ul id="navul" class="left hide-on-med-and-down">
-                <li data="a5" @click="platformClick('a5')"><a>A5</a></li>
-                <li data="zbj" @click="platformClick('zbj')"><a>猪八戒</a></li>
-                <li data="ypwk" @click="platformClick('ypwk')"><a>一品威客</a></li>
-            </ul>
-        </div>
-    </nav>
+<div th:id="app" v-loading="jobInfoLoading">
+
+    <el-menu :default-active="activeNavIndex" class="el-menu-demo" mode="horizontal" @select="handleNavSelect">
+        <el-menu-item index="a5">A5</el-menu-item>
+        <el-menu-item index="zbj">猪八戒</el-menu-item>
+        <el-menu-item index="ypwk">一品威客</a></el-menu-item>
+    </el-menu>
     <div v-if="jobInfo && jobInfo.platform" :gutter="20">
         <el-row class="row">
             <el-col :span="4">
@@ -123,9 +120,14 @@
         //这里存放数据
         data() {
             return {
+                activeNavIndex: 'zbj',
                 value: true,
-                jobInfo: {},
+                jobInfo: {
+                    platform: 'zbj'
+                },
+                jobInfoLoading: false,
                 show: false,
+                getTaskStatusTimer: null
             }
         },
         //计算属性 类似于 data 概念
@@ -134,69 +136,96 @@
         watch: {},
         //方法集合
         methods: {
+            startGetTaskStatusTimer() {
+                this.jobInfoLoading = true;
+                this.getTaskStatusTimer = setInterval(() => {
+                    this.getJobStatus(this.jobInfo.platform);
+                }, 1000);
+            },
+            stopGetTaskStatusTimer() {
+                if (this.getTaskStatusTimer) {
+                    clearInterval(this.getTaskStatusTimer)
+                    this.getTaskStatusTimer = null;
+                }
+            },
+            handleNavSelect(key, keyPath) {
+                this.stopGetTaskStatusTimer();
+                this.platformClick(keyPath[0]);
+            },
             switchJob() {
+                this.jobInfoLoading = true;
                 if (this.jobInfo.running) {
                     this.startJob(this.jobInfo.platform);
                 } else {
                     this.stopJob(this.jobInfo.platform);
                 }
-
             },
             platformClick(platform) {
+                this.jobInfoLoading = true;
                 this.jobInfo.platform = platform;
-                this.getJobStatus(platform);
+                this.getTaskStatusTimer || this.startGetTaskStatusTimer();
             },
             getJobStatus(platform) {
-                POST("/job/getJobStatus",
-                    {
-                        platform: platform
-                    }, (res) => {
+                POST({
+                    url: "/job/getJobStatus"
+                    , data: {platform}
+                    , finally: (res) => {
                         this.jobInfo = res.data;
-                    })
+                        this.jobInfoLoading = false;
+                    }
+                })
             },
             startJob(platform) {
-                POST("/job/start",
-                    {
-                        platform: platform
-                    }, (res) => {
+                POST({
+                    url: "/job/start"
+                    , data: {platform}
+                    , finally: (res) => {
                         console.log(res);
-                    })
+                    }
+                })
             },
             stopJob(platform) {
-                POST("/job/stop",
-                    {
-                        platform: platform
-                    }, (res) => {
+                POST({
+                    url: "/job/stop"
+                    , data: {platform}
+                    , finally: (res) => {
                         console.log(res.data);
-
-                    })
+                    }
+                })
             }
         },
         //生命周期 - 创建完成（可以访问当前 this 实例）
         created() {
 
-        },
+        }
+        ,
         //生命周期 - 挂载完成（可以访问 DOM 元素）
         mounted() {
-            this.platformClick('a5');
-            setInterval(() => {
-                this.getJobStatus(this.jobInfo.platform);
-            }, 1000);
-        },
+            this.startGetTaskStatusTimer();
+        }
+        ,
         beforeCreate() {
-        },//生命周期 - 创建之前
+        }
+        ,//生命周期 - 创建之前
         beforeMount() {
-        },//生命周期 - 挂载之前
+        }
+        ,//生命周期 - 挂载之前
         beforeUpload() {
-        },//生命周期 - 更新之前
+        }
+        ,//生命周期 - 更新之前
         updated() {
-        }, //生命周期 - 更新之后
+        }
+        , //生命周期 - 更新之后
         beforeDestroy() {
-        }, //生命周期 - 销毁之前
+        }
+        , //生命周期 - 销毁之前
         destroyed() {
-        },//生命周期 - 销毁完成
+        }
+        ,//生命周期 - 销毁完成
         activated() {
-        }, //如果页面有 keep-alive 缓存功能，这个函数会触发
+        }
+        , //如果页面有 keep-alive 缓存功能，这个函数会触发
+
     })
 </script>
 

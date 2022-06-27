@@ -1,6 +1,7 @@
 package com.wh.business.collectiontask;
 
 import com.p6spy.engine.spy.appender.MessageFormattingStrategy;
+import lombok.extern.log4j.Log4j2;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;

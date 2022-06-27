@@ -28,7 +28,7 @@ public class InitBinderDateAdvice {
         //java.util.Date类型格式化
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormat.setLenient(false);
-        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, false));
+        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
 
         //java.time.LocalDateTime类型格式化
         binder.registerCustomEditor(LocalDateTime.class, new PropertyEditorSupport() {

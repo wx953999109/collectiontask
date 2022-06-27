@@ -1,6 +1,7 @@
 package com.wh.business.collectiontask.controller;
 
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wh.business.collectiontask.domain.R;
 import com.wh.business.collectiontask.entity.TaskDO;
@@ -30,5 +31,19 @@ public class TaskController {
     public R Page(Page<TaskDO> p) {
         Page<TaskDO> page = taskService.page(p);
         return R.success(page);
+    }
+
+    @PostMapping("saveTask")
+    public R saveTask(TaskDO task) {
+        LambdaUpdateWrapper<TaskDO> luw = new LambdaUpdateWrapper<TaskDO>();
+        luw.eq(TaskDO::getId, task.getId());
+        luw.set(TaskDO::getFlag, task.getFlag());
+        luw.set(TaskDO::getRemark, task.getRemark());
+        luw.set(TaskDO::getCustomerContact, task.getCustomerContact());
+        if (taskService.update(luw)) {
+            return R.success();
+        } else {
+            return R.error();
+        }
     }
 }
