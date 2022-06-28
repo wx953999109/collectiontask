@@ -72,6 +72,11 @@ public class TaskDO implements Serializable {
     private String detail;
 
     /**
+     * 附件
+     */
+    private String appendix;
+
+    /**
      * 我的标记
      */
     private Integer flag;

@@ -2,9 +2,11 @@ window.POST = function (option) {
     $.ajax({
         type: "POST",
         url: option.url,
-        data: option.data,
+        data: JSON.stringify(option.data),
+        // contentType: "application/json; charset=UTF-8",
+        contentType:"application/x-www-form-urlencoded; charset=UTF-8",
         beforeSend: function (request) {
-            request.setRequestHeader("content-Type", "application/x-www-form-urlencoded");
+            // request.setRequestHeader("application/x-www-form-urlencoded; charset=UTF-8");
         },
         success: function (result) {
             if (result && result.code === 200) {

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.wh.business.collectiontask.controller.TaskManageControll;
 import com.wh.business.collectiontask.domain.IMyRunnable;
 import com.wh.business.collectiontask.domain.JobInfo;
+import com.wh.business.collectiontask.entity.TaskBlackNameListDO;
 import com.wh.business.collectiontask.entity.TaskDO;
 import com.wh.business.collectiontask.service.TaskBlackNameListService;
 import com.wh.business.collectiontask.service.TaskService;
@@ -114,6 +115,12 @@ public class CollectionJobZBJ implements InterruptableJob {
     private void ReadDetailRead(int pageNumber, int pageCount, List<String> listUrl) throws Exception {
         for (int i = 0; i < listUrl.size(); i++) {
             jobInfo.setLog("加载任务详细, 第" + pageNumber + "/" + pageCount + "页, " + (i + 1) + "/" + listUrl.size() + "个");
+            LambdaQueryWrapper<TaskBlackNameListDO> lqw = new LambdaQueryWrapper<TaskBlackNameListDO>();
+            lqw.eq(TaskBlackNameListDO::getUrl, listUrl.get(i));
+            if (taskBlackNameListService.count(lqw) > 0) {
+                jobInfo.setLog(jobInfo.getLog() + ", 在黑名单, 已跳过");
+                continue;
+            }
             IMyRunnable<String> task = new IMyRunnable<String>() {
                 String detailTaskUrl;
 
@@ -135,51 +142,157 @@ public class CollectionJobZBJ implements InterruptableJob {
                         taskDO.setPlatform(jobInfo.getPlatform());
                         //读取页面数据
                         Document doc = Jsoup.connect(detailTaskUrl).get();
-                        //来源任务id
-                        String taskId = "";
-                        Element elementTaskId = doc.selectFirst(".thrid-module-crumbs-container .color");
-                        if (elementTaskId != null) {
-                            taskId = (elementTaskId.text() + "").trim();
+                        //没有权限的任务直接跳过
+                        if (doc.select(".warning-content").size() > 0) {
+                            TaskBlackNameListDO blackName = new TaskBlackNameListDO();
+                            blackName.setUrl(detailTaskUrl);
+                            taskBlackNameListService.saveOrUpdate(blackName);
+                            return;
                         }
-                        taskDO.setTaskId(taskId.substring(taskId.indexOf("[") + 1, taskId.indexOf("]")));
-                        //解析标题
-                        taskDO.setTitle((doc.selectFirst(".order-header-title").text() + "").trim());
-                        //解析价格
-                        String priceStr = (doc.selectFirst(".order-header-price").text() + "").trim().replace("¥", "");
-                        BigDecimal price = null;
-                        try {
-                            if (!"可议价".equals(priceStr)) {
-                                price = BigDecimal.valueOf(Double.parseDouble(priceStr)).setScale(2, RoundingMode.HALF_UP);
-                            } else {
-                                price = BigDecimal.valueOf(-1);
+
+                        //某种页面的比稿网页格式
+                        Elements elementPageFormatA = doc.select(".tags .tag .name");
+                        //又是一种网页格式
+                        Elements elementPageFormatB = doc.select(".order-states-container .order-states-title");
+                        if (elementPageFormatA.size() > 0 && elementPageFormatA.text().contains("比稿")) {
+                            //来源任务id
+                            String taskId = "";
+                            Element elementTaskId = doc.selectFirst(".order-num-linker");
+                            if (elementTaskId != null) {
+                                taskId = (elementTaskId.text() + "").trim().replace("No：", "");
                             }
-                            taskDO.setPrice(price);
-                        } catch (Exception ex) {
-                            log.error(ex);
-                        }
-                        //解析状态
-                        String status = (doc.selectFirst(".third-module-order-detail .order-footer .button-group a").text() + "").trim();
-                        if (status.equals("参与类似任务")) {
-                            taskDO.setStatus("完成");
+                            taskDO.setTaskId(taskId.substring(taskId.indexOf("[") + 1, taskId.indexOf("]")));
+                            //解析标题
+                            taskDO.setTitle((doc.selectFirst(".order-title").text() + "").trim());
+                            //解析价格
+                            Element elementPrice = doc.selectFirst(".baseinfo p.seller");
+                            String priceStr = null;
+                            if (elementPrice != null) {
+                                priceStr = (elementPrice.text() + "").trim();
+                            }
+                            BigDecimal price = null;
+                            try {
+                                if (!"可议价".equals(priceStr)) {
+                                    price = BigDecimal.valueOf(Double.parseDouble(priceStr)).setScale(2, RoundingMode.HALF_UP);
+                                } else {
+                                    price = BigDecimal.valueOf(-1);
+                                }
+                                taskDO.setPrice(price);
+                            } catch (Exception ex) {
+                                log.error(ex);
+                            }
+                            //解析状态
+                            String status = (doc.selectFirst(".timeline-ul .orange").text() + "").trim();
+                            taskDO.setStatus(status);
+                            //解析任务类型
+                            Element tag = doc.selectFirst(".tagList .tags .tag:nth-child(3)");
+                            String type = "";
+                            if (tag != null) {
+                                type = tag.text();
+                            }
+                            taskDO.setTaskType(type);
+                            //解析任务详细
+                            Element element = doc.selectFirst(".info-item .desc");
+                            if (element != null) {
+                                taskDO.setDetail((element.text() + "").trim());
+                            }
+                            //客户联系方式
+                            //任务发布日期 暂时没找到在哪里, 或没有
+                            //taskDO.setPublishDatetime((doc.selectFirst(".m-detail-item span:nth-child(2)").text() + "").trim().replace("发布于", ""));
+                        } else if (elementPageFormatB.size() > 0 && elementPageFormatB.text().contains("订单状态")) {
+                            //来源任务id
+                            String taskId = "";
+                            Element elementTaskId = doc.selectFirst(".t10-newbid .bread-crumbs a");
+                            if (elementTaskId != null) {
+                                taskId = (elementTaskId.text() + "").trim();
+                                taskId = taskId.substring(taskId.indexOf("订单号： ") + 5);
+                            }
+                            taskDO.setTaskId(taskId.substring(taskId.indexOf("[") + 1, taskId.indexOf("]")));
+                            //解析标题
+                            taskDO.setTitle((doc.selectFirst(".J-description-ordertitle").text() + "").trim());
+                            //解析价格
+                            Element elementPrice = doc.selectFirst(".description .orange-color");
+                            String priceStr = null;
+                            if (elementPrice != null) {
+                                priceStr = (elementPrice.text() + "").trim();
+                            }
+                            BigDecimal price = null;
+                            try {
+                                if (!"可议价".equals(priceStr)) {
+                                    price = BigDecimal.valueOf(Double.parseDouble(priceStr)).setScale(2, RoundingMode.HALF_UP);
+                                } else {
+                                    price = BigDecimal.valueOf(-1);
+                                }
+                                taskDO.setPrice(price);
+                            } catch (Exception ex) {
+                                log.error(ex);
+                            }
+                            //解析状态
+                            String status = (doc.selectFirst(".timeline-ul .orange").text() + "").trim();
+                            taskDO.setStatus(status);
+                            //解析任务类型
+                            Element tag = doc.selectFirst(".tagList .tags .tag:nth-child(3)");
+                            String type = "";
+                            if (tag != null) {
+                                type = tag.text();
+                            }
+                            taskDO.setTaskType(type);
+                            //解析任务详细
+                            Element element = doc.selectFirst(".info-item .desc");
+                            if (element != null) {
+                                taskDO.setDetail((element.text() + "").trim());
+                            }
+                            //客户联系方式
+                            //任务发布日期 暂时没找到在哪里, 或没有
+                            //taskDO.setPublishDatetime((doc.selectFirst(".m-detail-item span:nth-child(2)").text() + "").trim().replace("发布于", ""));
                         } else {
+                            //来源任务id
+                            String taskId = "";
+                            Element elementTaskId = doc.selectFirst(".thrid-module-crumbs-container .color");
+                            if (elementTaskId != null) {
+                                taskId = (elementTaskId.text() + "").trim();
+                            }
+                            taskDO.setTaskId(taskId.substring(taskId.indexOf("[") + 1, taskId.indexOf("]")));
+                            //解析标题
+                            taskDO.setTitle((doc.selectFirst(".order-header-title").text() + "").trim());
+                            //解析价格
+                            String priceStr = (doc.selectFirst(".order-header-price").text() + "").trim().replace("¥", "");
+                            BigDecimal price = null;
+                            try {
+                                if (!"可议价".equals(priceStr)) {
+                                    price = BigDecimal.valueOf(Double.parseDouble(priceStr)).setScale(2, RoundingMode.HALF_UP);
+                                } else {
+                                    price = BigDecimal.valueOf(-1);
+                                }
+                                taskDO.setPrice(price);
+                            } catch (Exception ex) {
+                                log.error(ex);
+                            }
+                            //解析状态
                             taskDO.setStatus("进行中");
+                            //解析任务类型
+                            Elements modules = doc.select("task-addtional");
+                            String type = "";
+                            if (modules.size() > 0) {
+                                type = modules.text();
+                            }
+                            taskDO.setTaskType(type);
+                            //解析任务详细
+                            Element element = doc.selectFirst(".description");
+                            if (element != null) {
+                                taskDO.setDetail((element.text() + "").trim());
+                            }
+                            //客户联系方式
+                            //任务发布日期 暂时没找到在哪里, 或没有
+                            //taskDO.setPublishDatetime((doc.selectFirst(".m-detail-item span:nth-child(2)").text() + "").trim().replace("发布于", ""));
                         }
-                        //解析任务类型
-                        Elements modules = doc.select(".thrid-module-crumbs-container a[target]");
-                        modules.addAll(doc.select(".order-header-tags span[data-linkid]"));
-                        String type = "";
-                        if (modules.size() > 0) {
-                            type = modules.eachText().stream().distinct().collect(Collectors.joining(","));
+
+                        //附件
+                        Elements appendixList = doc.select(".appendix-download-link");
+                        if (appendixList.size() > 0) {
+                            String appendixStr = appendixList.eachAttr("href").stream().map(Object::toString).collect(Collectors.joining("#delimiter#"));
+                            taskDO.setAppendix(appendixStr);
                         }
-                        taskDO.setTaskType(type);
-                        //解析任务详细
-                        Element element = doc.selectFirst(".content-text");
-                        if (element != null) {
-                            taskDO.setDetail((element.text() + "").trim());
-                        }
-                        //客户联系方式
-                        //任务发布日期 暂时没找到在哪里, 或没有
-                        //taskDO.setPublishDatetime((doc.selectFirst(".m-detail-item span:nth-child(2)").text() + "").trim().replace("发布于", ""));
 
                         //查询已经存在的任务
                         LambdaQueryWrapper<TaskDO> wrapper = new LambdaQueryWrapper<TaskDO>();

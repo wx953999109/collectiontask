@@ -1,5 +1,6 @@
 package com.wh.business.collectiontask.controller;
 
+import com.wh.business.collectiontask.annotation.MultiRequestBody;
 import com.wh.business.collectiontask.domain.JobInfo;
 import com.wh.business.collectiontask.domain.R;
 import com.wh.business.collectiontask.schedulejob.CollectionJobA5;
@@ -45,7 +46,7 @@ public class TaskManageControll {
     }
 
     @PostMapping("getJobStatus")
-    R getJobStatus(String platform) throws Exception {
+    R getJobStatus(@MultiRequestBody String platform) throws Exception {
         Assert.isTrue(Arrays.asList(platforms).contains(platform), "平台代码错误");
 
         JobInfo jobInfo = jobs.get(platform);
@@ -57,7 +58,7 @@ public class TaskManageControll {
     }
 
     @PostMapping("start")
-    R startJob(String platform) throws Exception {
+    R startJob(@MultiRequestBody String platform) throws Exception {
         Class jobClass = null;
         if ("a5".equalsIgnoreCase(platform)) {
             jobClass = CollectionJobA5.class;
@@ -93,7 +94,7 @@ public class TaskManageControll {
     }
 
     @PostMapping("stop")
-    R stop(String platform) throws Exception {
+    R stop(@MultiRequestBody String platform) throws Exception {
 
         JobKey jobKey = JobKey.jobKey(platform, "default-group");
         JobDetail jobDetail = scheduler.getJobDetail(jobKey);

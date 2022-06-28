@@ -44,31 +44,44 @@
 </header>
 
 <div th:id="app" style="height: 100%">
+    <el-form ref="form" :model="search" label-width="80px">
+        <el-form-item label="任务详细">
+            <el-input v-model="search.detail"></el-input>
+        </el-form-item>
+        <el-button type="primary" @click="onSubmit">查询</el-button>
+        <el-button @click="onReset">重置</el-button>
+    </el-form>
     <el-table
             :data="page.records"
             style="width: 100%"
-            height="95%">
+            height="85%">
         <el-table-column
                 fixed
                 prop="index"
                 label="#"
-                width="100">
+                width="80">
         </el-table-column>
         <el-table-column
                 fixed
                 prop="id"
                 label="id"
-                width="100">
+                width="80">
+        </el-table-column>
+        <el-table-column
+                fixed
+                prop="taskId"
+                label="来源ID"
+                width="80">
         </el-table-column>
         <el-table-column
                 prop="title"
                 label="标题"
-                width="500">
+                width="220">
         </el-table-column>
         <el-table-column
                 prop="price"
                 label="价格"
-                width="120">
+                width="80">
         </el-table-column>
         <el-table-column
                 prop="status"
@@ -85,12 +98,6 @@
                 label="发布日期"
                 width="120">
         </el-table-column>
-        <!--        <el-table-column-->
-        <!--                prop="detail"-->
-        <!--                :formatter="taskDetailFormatter"-->
-        <!--                label="任务详细"-->
-        <!--                width="150">-->
-        <!--        </el-table-column>-->
         <el-table-column
                 prop="flag"
                 label="标记"
@@ -110,6 +117,16 @@
                 prop="platform"
                 label="平台"
                 width="120">
+        </el-table-column>
+        <el-table-column
+                prop="detail"
+                label="详细"
+                width="280">
+            <template slot-scope="scope">
+                <el-tooltip class="item" effect="dark" :content="scope.row.detail" placement="top-start">
+                    <a>{{scope.row.detail.substring(0, 30)}}</a>
+                </el-tooltip>
+            </template>
         </el-table-column>
         <el-table-column
                 prop="url"
@@ -144,7 +161,7 @@
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="page.current"
-            :page-sizes="[8, 10, 20, 30]"
+            :page-sizes="[8, 10, 15, 20]"
             :page-size="page.size"
             layout="total, sizes, prev, pager, next, jumper"
             :total="page.total">
@@ -190,7 +207,7 @@
 
                 <el-row :gutter="20">
                     <el-col :span="24">
-                        <div class="grid-content bg-purple">{{'任务详细url: '}}
+                        <div class="grid-content bg-purple">任务详细url:
                             <a target="_blank" :href="detailTaskData.url">{{detailTaskData.url}}</a>
                         </div>
                     </el-col>
@@ -214,6 +231,17 @@
                     </el-col>
                 </el-row>
 
+                <el-row :gutter="20" v-if="detailTaskData && detailTaskData.appendix">
+                    <el-col :span="1">
+                        <div>附件:</div>
+                    </el-col>
+                    <el-col :span="2" v-for="(item,index) in detailTaskData.appendix.split('#delimiter#')">
+                        <div class="grid-content bg-purple">
+                            <a target="_blank" :href="item">{{'附件' + (index + 1)}}</a>
+                        </div>
+                    </el-col>
+                </el-row>
+
                 <el-form-item label="我的标记" prop="flag">
                     <el-select v-model="detailTaskData.flag" placeholder="我的标记">
                         <el-option label="a" :value="0"></el-option>
@@ -232,7 +260,7 @@
             <div class="demo-drawer__footer">
                 <el-button @click="cancelDetailDrawer">取 消</el-button>
                 <el-button type="primary" @click="saveData" :loading="detailSubmitButtonLoading">
-                    {{ detailSubmitButtonLoading ? '提交中 ...' : '确 定' }}
+                    {{ detailSubmitButtonLoading ? "提交中 ..." : "确 定" }}
                 </el-button>
             </div>
         </div>
@@ -265,6 +293,9 @@
         data() {
             return {
                 activeNavIndex: '1',
+                search: {
+                    detail: ''
+                },
                 page: {
                     current: 1,
                     total: 0,
@@ -282,12 +313,21 @@
         watch: {},
         //方法集合
         methods: {
+            onSubmit() {
+                this.pageData();
+            },
+            onReset() {
+                this.search = {};
+            },
             //分页查询数据
             pageData() {
                 this.page.records = null;
                 POST({
                     url: "/task/page"
-                    , data: this.page
+                    , data: {
+                        page: this.page,
+                        search: this.search
+                    }
                     , finally: (res) => {
                         let data = res.data;
                         if (data && data.records && data.records.length > 0) {
@@ -298,22 +338,26 @@
                         this.page = data;
                     }
                 })
-            },
+            }
+            ,
             //每页显示数量改变
             handleSizeChange(val) {
                 this.page.size = val;
                 this.pageData();
-            },
+            }
+            ,
             //改变页码
             handleCurrentChange(val) {
                 this.page.current = val;
                 this.pageData();
-            },
+            }
+            ,
             //显示详细任务数据
             viewDetailTaskDrawer(task) {
                 this.detailDrawerVisible = true;
                 this.detailTaskData = task;
-            },
+            }
+            ,
             //保存数据
             saveData() {
                 if (this.detailSubmitButtonLoading) {
@@ -337,11 +381,13 @@
                     })
                     .catch(_ => {
                     });
-            },
+            }
+            ,
             //任务详细抽屉关闭事件
             handleDetailDrawerClose(done) {
                 this.detailDrawerVisible = false;
-            },
+            }
+            ,
             //关闭详细抽屉
             cancelDetailDrawer() {
                 this.detailDrawerVisible = false;
@@ -350,25 +396,34 @@
         //生命周期 - 创建完成（可以访问当前 this 实例）
         created() {
 
-        },
+        }
+        ,
         //生命周期 - 挂载完成（可以访问 DOM 元素）
         mounted() {
             this.pageData();
-        },
+        }
+        ,
         beforeCreate() {
-        },//生命周期 - 创建之前
+        }
+        ,//生命周期 - 创建之前
         beforeMount() {
-        },//生命周期 - 挂载之前
+        }
+        ,//生命周期 - 挂载之前
         beforeUpload() {
-        },//生命周期 - 更新之前
+        }
+        ,//生命周期 - 更新之前
         updated() {
-        }, //生命周期 - 更新之后
+        }
+        , //生命周期 - 更新之后
         beforeDestroy() {
-        }, //生命周期 - 销毁之前
+        }
+        , //生命周期 - 销毁之前
         destroyed() {
-        },//生命周期 - 销毁完成
+        }
+        ,//生命周期 - 销毁完成
         activated() {
-        }, //如果页面有 keep-alive 缓存功能，这个函数会触发
+        }
+        , //如果页面有 keep-alive 缓存功能，这个函数会触发
     })
 </script>
 

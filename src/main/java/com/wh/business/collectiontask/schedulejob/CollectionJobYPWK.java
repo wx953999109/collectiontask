@@ -200,11 +200,23 @@ public class CollectionJobYPWK implements InterruptableJob {
                         if (element != null) {
                             taskDO.setDetail((element.text() + "").trim());
                         }
+                        Element elementTips = doc.selectFirst(".m-task-tips");
+                        if (elementTips != null) {
+                            taskDO.setDetail(taskDO.getDetail() + "\r\n" + (elementTips.text() + "").trim());
+                        }
+
                         //客户联系方式
                         //任务发布日期
                         Element elementPublishDatetime = doc.selectFirst(".task-progress-item .step_on font");
                         if (elementPublishDatetime != null) {
                             taskDO.setPublishDatetime((elementPublishDatetime.text() + "").trim().replace("发布于", ""));
+                        }
+
+                        //附件
+                        Elements appendixList = doc.select(".task-info-wrap .c06c");
+                        if (appendixList.size() > 0) {
+                            String appendixStr = appendixList.eachAttr("href").stream().map(Object::toString).collect(Collectors.joining("#delimiter#"));
+                            taskDO.setAppendix(appendixStr);
                         }
 
                         //查询已经存在的任务
