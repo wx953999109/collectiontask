@@ -136,7 +136,11 @@ public class CollectionJobZBJ implements InterruptableJob {
                         //读取页面数据
                         Document doc = Jsoup.connect(detailTaskUrl).get();
                         //来源任务id
-                        String taskId = (doc.selectFirst(".thrid-module-crumbs-container .color").text() + "").trim();
+                        String taskId = "";
+                        Element elementTaskId = doc.selectFirst(".thrid-module-crumbs-container .color");
+                        if (elementTaskId != null) {
+                            taskId = (elementTaskId.text() + "").trim();
+                        }
                         taskDO.setTaskId(taskId.substring(taskId.indexOf("[") + 1, taskId.indexOf("]")));
                         //解析标题
                         taskDO.setTitle((doc.selectFirst(".order-header-title").text() + "").trim());
