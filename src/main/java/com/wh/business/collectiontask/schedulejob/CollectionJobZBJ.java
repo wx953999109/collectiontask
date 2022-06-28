@@ -20,7 +20,9 @@ import org.springframework.transaction.TransactionDefinition;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -192,11 +194,13 @@ public class CollectionJobZBJ implements InterruptableJob {
                         }
                         jobInfo.setCollectionCount(jobInfo.getCollectionCount() + 1);
                         //dataSourceTransactionManager.commit(transactionStatus);
-                    } catch (HttpStatusException igion) {
+                    } catch (HttpStatusException | SocketTimeoutException ignore) {
 
                     } catch (Exception exception) {
+                        String stackTraces = Arrays.asList(exception.getStackTrace()).stream().map(Object::toString).collect(Collectors.joining(", "));
                         log.error(detailTaskUrl);
                         log.error(exception);
+                        log.error(stackTraces);
                     }
 
                 }

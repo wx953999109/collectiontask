@@ -9,6 +9,7 @@ import com.wh.business.collectiontask.service.TaskBlackNameListService;
 import com.wh.business.collectiontask.service.TaskService;
 import com.wh.business.collectiontask.util.ApplicationContextUtils;
 import lombok.extern.log4j.Log4j2;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,11 +20,14 @@ import org.springframework.transaction.TransactionDefinition;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @DisallowConcurrentExecution
 @Log4j2
@@ -169,9 +173,13 @@ public class CollectionJobA5 implements InterruptableJob {
                         }
                         jobInfo.setCollectionCount(jobInfo.getCollectionCount() + 1);
                         //dataSourceTransactionManager.commit(transactionStatus);
+                    } catch (HttpStatusException | SocketTimeoutException ignore) {
+
                     } catch (Exception exception) {
+                        String stackTraces = Arrays.asList(exception.getStackTrace()).stream().map(Object::toString).collect(Collectors.joining(", "));
                         log.error(detailTaskUrl);
                         log.error(exception);
+                        log.error(stackTraces);
                     }
 
                 }

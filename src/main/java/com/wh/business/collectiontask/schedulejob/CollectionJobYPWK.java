@@ -9,6 +9,7 @@ import com.wh.business.collectiontask.entity.TaskDO;
 import com.wh.business.collectiontask.service.TaskBlackNameListService;
 import com.wh.business.collectiontask.service.TaskService;
 import com.wh.business.collectiontask.util.ApplicationContextUtils;
+import lombok.experimental.Accessors;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -21,7 +22,9 @@ import org.springframework.transaction.TransactionDefinition;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -31,6 +34,7 @@ import java.util.stream.Collectors;
 
 @DisallowConcurrentExecution
 @Log4j2
+@Accessors(chain = true, fluent = true, makeFinal = true)
 public class CollectionJobYPWK implements InterruptableJob {
 
     final String host = "https://task.epwk.com/";
@@ -163,6 +167,9 @@ public class CollectionJobYPWK implements InterruptableJob {
                         if (priceStr.contains("万")) {
                             priceStr = priceStr.replace("万", "0000");
                         }
+                        if (priceStr.contains("以上")) {
+                            priceStr = priceStr.replace("以上", "");
+                        }
                         BigDecimal price = null;
                         try {
                             price = BigDecimal.valueOf(Double.parseDouble(priceStr)).setScale(2, RoundingMode.HALF_UP);
@@ -172,7 +179,16 @@ public class CollectionJobYPWK implements InterruptableJob {
                             log.error(ex);
                         }
                         //解析状态
-                        String status = (doc.selectFirst(".task-progress-item .crent b").text() + "").trim();
+                        String status = "";
+                        Element ended = doc.selectFirst(".taskend .pb_20 .ceb2");
+                        if (ended != null && ended.text().contains("已结束")) {
+                            status = "已结束";
+                        } else {
+                            Element elementStatus = doc.selectFirst(".task-progress-item .crent b");
+                            if (elementStatus != null) {
+                                status = (elementStatus.text() + "").trim();
+                            }
+                        }
                         taskDO.setStatus(status);
                         //解析任务类型
                         String type = doc.select(".crumbs .f_l span").text();
@@ -186,7 +202,10 @@ public class CollectionJobYPWK implements InterruptableJob {
                         }
                         //客户联系方式
                         //任务发布日期
-                        taskDO.setPublishDatetime((doc.selectFirst(".task-progress-item .step_on font").text() + "").trim().replace("发布于", ""));
+                        Element elementPublishDatetime = doc.selectFirst(".task-progress-item .step_on font");
+                        if (elementPublishDatetime != null) {
+                            taskDO.setPublishDatetime((elementPublishDatetime.text() + "").trim().replace("发布于", ""));
+                        }
 
                         //查询已经存在的任务
                         LambdaQueryWrapper<TaskDO> wrapper = new LambdaQueryWrapper<TaskDO>();
@@ -205,11 +224,13 @@ public class CollectionJobYPWK implements InterruptableJob {
                         }
                         jobInfo.setCollectionCount(jobInfo.getCollectionCount() + 1);
                         //dataSourceTransactionManager.commit(transactionStatus);
-                    } catch (HttpStatusException igion) {
+                    } catch (HttpStatusException | SocketTimeoutException ignore) {
 
                     } catch (Exception exception) {
+                        String stackTraces = Arrays.asList(exception.getStackTrace()).stream().map(Object::toString).collect(Collectors.joining(", "));
                         log.error(detailTaskUrl);
                         log.error(exception);
+                        log.error(stackTraces);
                     }
 
                 }
