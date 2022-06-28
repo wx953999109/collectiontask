@@ -5,6 +5,7 @@ import com.wh.business.collectiontask.controller.TaskManageControll;
 import com.wh.business.collectiontask.domain.IMyRunnable;
 import com.wh.business.collectiontask.domain.JobInfo;
 import com.wh.business.collectiontask.entity.TaskDO;
+import com.wh.business.collectiontask.service.TaskBlackNameListService;
 import com.wh.business.collectiontask.service.TaskService;
 import com.wh.business.collectiontask.util.ApplicationContextUtils;
 import lombok.extern.log4j.Log4j2;
@@ -31,14 +32,16 @@ public class CollectionJobA5 implements InterruptableJob {
     final String host = "https://www.a5.cn/";
     JobInfo jobInfo;
     TaskService taskService;
+    TaskBlackNameListService taskBlackNameListService;
     ScheduledExecutorService scheduExec = Executors.newScheduledThreadPool(1);
     private DataSourceTransactionManager dataSourceTransactionManager;
     private TransactionDefinition transactionDefinition;
 
-    int delay = 5000;
+    int delay = 3000;
 
     CollectionJobA5() {
         taskService = (TaskService) ApplicationContextUtils.getBean(TaskService.class);
+        taskBlackNameListService = (TaskBlackNameListService) ApplicationContextUtils.getBean(TaskBlackNameListService.class);
         transactionDefinition = (TransactionDefinition) ApplicationContextUtils.getBean(TransactionDefinition.class);
         dataSourceTransactionManager = (DataSourceTransactionManager) ApplicationContextUtils.getBean(DataSourceTransactionManager.class);
     }

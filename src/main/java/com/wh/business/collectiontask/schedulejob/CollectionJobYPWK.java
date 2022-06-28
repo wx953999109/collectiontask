@@ -4,10 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.wh.business.collectiontask.controller.TaskManageControll;
 import com.wh.business.collectiontask.domain.IMyRunnable;
 import com.wh.business.collectiontask.domain.JobInfo;
+import com.wh.business.collectiontask.entity.TaskBlackNameListDO;
 import com.wh.business.collectiontask.entity.TaskDO;
+import com.wh.business.collectiontask.service.TaskBlackNameListService;
 import com.wh.business.collectiontask.service.TaskService;
 import com.wh.business.collectiontask.util.ApplicationContextUtils;
 import lombok.extern.log4j.Log4j2;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -33,14 +36,16 @@ public class CollectionJobYPWK implements InterruptableJob {
     final String host = "https://task.epwk.com/";
     JobInfo jobInfo;
     TaskService taskService;
+    TaskBlackNameListService taskBlackNameListService;
     ScheduledExecutorService scheduExec = Executors.newScheduledThreadPool(1);
     private DataSourceTransactionManager dataSourceTransactionManager;
     private TransactionDefinition transactionDefinition;
 
-    int delay = 5000;
+    int delay = 3000;
 
     CollectionJobYPWK() {
         taskService = (TaskService) ApplicationContextUtils.getBean(TaskService.class);
+        taskBlackNameListService = (TaskBlackNameListService) ApplicationContextUtils.getBean(TaskBlackNameListService.class);
         transactionDefinition = (TransactionDefinition) ApplicationContextUtils.getBean(TransactionDefinition.class);
         dataSourceTransactionManager = (DataSourceTransactionManager) ApplicationContextUtils.getBean(DataSourceTransactionManager.class);
     }
@@ -105,6 +110,12 @@ public class CollectionJobYPWK implements InterruptableJob {
     private void ReadDetailRead(int pageNumber, int pageCount, List<String> listUrl) throws Exception {
         for (int i = 0; i < listUrl.size(); i++) {
             jobInfo.setLog("加载任务详细, 第" + pageNumber + "/" + pageCount + "页, " + (i + 1) + "/" + listUrl.size() + "个");
+            LambdaQueryWrapper<TaskBlackNameListDO> lqw = new LambdaQueryWrapper<TaskBlackNameListDO>();
+            lqw.eq(TaskBlackNameListDO::getUrl, listUrl.get(i));
+            if (taskBlackNameListService.count(lqw) > 0) {
+                jobInfo.setLog(jobInfo.getLog() + ", 在黑名单, 已跳过");
+                continue;
+            }
             IMyRunnable<String> task = new IMyRunnable<String>() {
                 String detailTaskUrl;
 
@@ -126,8 +137,19 @@ public class CollectionJobYPWK implements InterruptableJob {
                         taskDO.setPlatform(jobInfo.getPlatform());
                         //读取页面数据
                         Document doc = Jsoup.connect(detailTaskUrl).get();
-                        //来源任务id
 
+                        if (doc.select(".tasktodetail .clearfix .f_l .clearfix b").text().contains("该任务为直接雇佣")) {
+                            TaskBlackNameListDO blackName = new TaskBlackNameListDO();
+                            blackName.setUrl(detailTaskUrl);
+                            //上面已经判断过, 这里不用判断是否存在了, 应该是不存在的
+//                            if (taskBlackNameListService.count(lqw) == 0) {
+//                                taskBlackNameListService.saveOrUpdate(blackName);
+//                            }
+                            taskBlackNameListService.saveOrUpdate(blackName);
+                            return;
+                        }
+
+                        //来源任务id
                         String taskId = detailTaskUrl.replace(host, "").replace("/", "");
                         taskDO.setTaskId(taskId);
                         //解析标题
@@ -154,7 +176,7 @@ public class CollectionJobYPWK implements InterruptableJob {
                         taskDO.setStatus(status);
                         //解析任务类型
                         String type = doc.select(".crumbs .f_l span").text();
-                        type = type.replace("当前位置： 首页 > 所有任务 > ", "").replace(">", ",").replace(" ","");
+                        type = type.replace("当前位置： 首页 > 所有任务 > ", "").replace(">", ",").replace(" ", "");
                         type = type.substring(0, type.lastIndexOf(","));
                         taskDO.setTaskType(type);
                         //解析任务详细
@@ -183,6 +205,8 @@ public class CollectionJobYPWK implements InterruptableJob {
                         }
                         jobInfo.setCollectionCount(jobInfo.getCollectionCount() + 1);
                         //dataSourceTransactionManager.commit(transactionStatus);
+                    } catch (HttpStatusException igion) {
+
                     } catch (Exception exception) {
                         System.out.println(exception);
                         log.error(exception);

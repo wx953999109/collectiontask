@@ -5,9 +5,11 @@ import com.wh.business.collectiontask.controller.TaskManageControll;
 import com.wh.business.collectiontask.domain.IMyRunnable;
 import com.wh.business.collectiontask.domain.JobInfo;
 import com.wh.business.collectiontask.entity.TaskDO;
+import com.wh.business.collectiontask.service.TaskBlackNameListService;
 import com.wh.business.collectiontask.service.TaskService;
 import com.wh.business.collectiontask.util.ApplicationContextUtils;
 import lombok.extern.log4j.Log4j2;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -33,14 +35,16 @@ public class CollectionJobZBJ implements InterruptableJob {
     final String host = "https://task.zbj.com/";
     JobInfo jobInfo;
     TaskService taskService;
+    TaskBlackNameListService taskBlackNameListService;
     ScheduledExecutorService scheduExec = Executors.newScheduledThreadPool(1);
     private DataSourceTransactionManager dataSourceTransactionManager;
     private TransactionDefinition transactionDefinition;
 
-    int delay = 5000;
+    int delay = 3000;
 
     CollectionJobZBJ() {
         taskService = (TaskService) ApplicationContextUtils.getBean(TaskService.class);
+        taskBlackNameListService = (TaskBlackNameListService) ApplicationContextUtils.getBean(TaskBlackNameListService.class);
         transactionDefinition = (TransactionDefinition) ApplicationContextUtils.getBean(TransactionDefinition.class);
         dataSourceTransactionManager = (DataSourceTransactionManager) ApplicationContextUtils.getBean(DataSourceTransactionManager.class);
     }
@@ -138,10 +142,13 @@ public class CollectionJobZBJ implements InterruptableJob {
                         String priceStr = (doc.selectFirst(".order-header-price").text() + "").trim().replace("¥", "");
                         BigDecimal price = null;
                         try {
-                            price = BigDecimal.valueOf(Double.parseDouble(priceStr)).setScale(2, RoundingMode.HALF_UP);
+                            if (!"可议价".equals(priceStr)) {
+                                price = BigDecimal.valueOf(Double.parseDouble(priceStr)).setScale(2, RoundingMode.HALF_UP);
+                            } else {
+                                price = BigDecimal.valueOf(-1);
+                            }
                             taskDO.setPrice(price);
                         } catch (Exception ex) {
-                            System.out.println(ex);
                             log.error(ex);
                         }
                         //解析状态
@@ -154,7 +161,10 @@ public class CollectionJobZBJ implements InterruptableJob {
                         //解析任务类型
                         Elements modules = doc.select(".thrid-module-crumbs-container a[target]");
                         modules.addAll(doc.select(".order-header-tags span[data-linkid]"));
-                        String type = modules.eachText().stream().distinct().collect(Collectors.joining(","));
+                        String type = "";
+                        if (modules.size() > 0) {
+                            type = modules.eachText().stream().distinct().collect(Collectors.joining(","));
+                        }
                         taskDO.setTaskType(type);
                         //解析任务详细
                         Element element = doc.selectFirst(".content-text");
@@ -182,6 +192,8 @@ public class CollectionJobZBJ implements InterruptableJob {
                         }
                         jobInfo.setCollectionCount(jobInfo.getCollectionCount() + 1);
                         //dataSourceTransactionManager.commit(transactionStatus);
+                    } catch (HttpStatusException igion) {
+
                     } catch (Exception exception) {
                         System.out.println(exception);
                         log.error(exception);
