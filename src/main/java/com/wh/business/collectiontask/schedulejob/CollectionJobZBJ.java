@@ -123,7 +123,7 @@ public class CollectionJobZBJ implements InterruptableJob {
 
                 @Override
                 public void run() {
-                    System.out.println(Thread.currentThread().getName() + "\t" + detailTaskUrl);
+                    log.info(Thread.currentThread().getName() + "\t" + detailTaskUrl);
                     //TransactionStatus transactionStatus = dataSourceTransactionManager.getTransaction(transactionDefinition);
                     TaskDO taskDO = new TaskDO();
                     //任务详细url
@@ -195,7 +195,7 @@ public class CollectionJobZBJ implements InterruptableJob {
                     } catch (HttpStatusException igion) {
 
                     } catch (Exception exception) {
-                        System.out.println(exception);
+                        log.error(detailTaskUrl);
                         log.error(exception);
                     }
 

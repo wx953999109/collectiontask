@@ -119,7 +119,7 @@ public class CollectionJobA5 implements InterruptableJob {
 
                 @Override
                 public void run() {
-                    System.out.println(Thread.currentThread().getName() + "\t" + detailTaskUrl);
+                    log.info(Thread.currentThread().getName() + "\t" + detailTaskUrl);
                     //TransactionStatus transactionStatus = dataSourceTransactionManager.getTransaction(transactionDefinition);
                     TaskDO taskDO = new TaskDO();
                     //任务详细url
@@ -170,6 +170,7 @@ public class CollectionJobA5 implements InterruptableJob {
                         jobInfo.setCollectionCount(jobInfo.getCollectionCount() + 1);
                         //dataSourceTransactionManager.commit(transactionStatus);
                     } catch (Exception exception) {
+                        log.error(detailTaskUrl);
                         log.error(exception);
                     }
 
