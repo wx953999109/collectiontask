@@ -147,20 +147,7 @@
                     <fork>true</fork>
                     <arguments>-Dfile.encoding=UTF-8</arguments>
                     <addResources>true</addResources>
-<!--                    <excludes>-->
-<!--                        <exclude>-->
-<!--                            <groupId>org.projectlombok</groupId>-->
-<!--                            <artifactId>lombok</artifactId>-->
-<!--                        </exclude>-->
-<!--                    </excludes>-->
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>16</source>
-                    <target>16</target>
+                    <executable>true</executable>
                 </configuration>
             </plugin>
         </plugins>

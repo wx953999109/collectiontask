@@ -4,8 +4,8 @@ spring:
     # 更换p6spy的驱动
     driver-class-name: com.p6spy.engine.spy.P6SpyDriver
     url: "jdbc:p6spy:mysql://localhost:3306/collectiontask?useAffectedRows=true&allowMultiQueries=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false"
-    username: root  #数据库用户名，root为管理员
-    password: root #该数据库用户的密码
+    username: root
+    password: Wuhao19920205!@#
     # 使用druid数据源
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
@@ -22,40 +22,37 @@ spring:
     encoding: UTF-8
     servlet:
       content-type: text/html
+
   quartz:
-  job-store-type: jdbc
-  # 是否等待任务执行完毕后，容器才会关闭
-  wait-for-jobs-to-complete-on-shutdown: true
-  scheduler-name: SpringBootScheduler
-  properties:
-    org:
-      quartz:
-        threadPool:
-          # 线程数量
-          threadCount: 5
-          # 线程优先级
-          threadPriority: 5
-          # 线程池中线程名称的前缀
-          threadNamePrefix: test-thread
-          # 加载任务代码的ClassLoader是否从外部继承
-          threadsInheritContextClassLoaderOfInitializingThread: true
-        jobStore:
-          # 最大能忍受的触发超时时间，如果超时则认为“失误”
-          misfireThreshold: 5000
-          # 选择JDBC的存储方式
-          class: org.quartz.impl.jdbcjobstore.JobStoreTX
-          # 类似于Hibernate的dialect，用于处理DB之间的差异，StdJDBCDelegate能满足大部分的DB（授权）
-          driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
-          # 在调度流程的第一步，也就是拉取待即将触发的triggers时，是上锁的状态，即不会同时存在多个线程拉取到相同的trigger的情况，也就避免的重复调度的危险。参考：https://segmentfault.com/a/1190000015492260
-          acquireTriggersWithinLock: true
+    job-store-type: jdbc
+    # 是否等待任务执行完毕后，容器才会关闭
+    wait-for-jobs-to-complete-on-shutdown: true
+    scheduler-name: SpringBootScheduler
+    properties:
+      org:
+        quartz:
+          threadPool:
+            # 线程数量
+            threadCount: 5
+            # 线程优先级
+            threadPriority: 5
+            # 线程池中线程名称的前缀
+            threadNamePrefix: test-thread
+            # 加载任务代码的ClassLoader是否从外部继承
+            threadsInheritContextClassLoaderOfInitializingThread: true
+          jobStore:
+            # 最大能忍受的触发超时时间，如果超时则认为“失误”
+            misfireThreshold: 5000
+            # 选择JDBC的存储方式
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            # 类似于Hibernate的dialect，用于处理DB之间的差异，StdJDBCDelegate能满足大部分的DB（授权）
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            # 在调度流程的第一步，也就是拉取待即将触发的triggers时，是上锁的状态，即不会同时存在多个线程拉取到相同的trigger的情况，也就避免的重复调度的危险。参考：https://segmentfault.com/a/1190000015492260
+            acquireTriggersWithinLock: true
+
+
 server:
   port: 9002
-
-mybatis:
-  config-location: classpath:mybatis.cfg.xml    #  mybatis主配置文件所在路径
-  type-aliases-package: com.wh.business.collectiontask  #  定义所有操作类的别名所在包
-  mapper-locations: #  所有的mapper映射文件
-    - classpath:mapper/*.xml
 
 # mybatis-plus相关配置
 mybatis-plus:
@@ -80,6 +77,8 @@ mybatis-plus:
     call-setters-on-nulls: false
     # 这个配置会将执行的sql打印出来，在开发或测试的时候可以用
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  type-aliases-package: com.wh.business.collectiontask
+  config-location: classpath:mybatis.cfg.xml
 
 logging:
   file:

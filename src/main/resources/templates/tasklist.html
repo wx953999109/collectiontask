@@ -124,7 +124,7 @@
                 width="280">
             <template slot-scope="scope">
                 <el-tooltip class="item" effect="dark" :content="scope.row.detail" placement="top-start">
-                    <a>{{scope.row.detail.substring(0, 30)}}</a>
+                    <a v-if="scope.row.detail">{{scope.row.detail.substring(0, 30)}}</a>
                 </el-tooltip>
             </template>
         </el-table-column>

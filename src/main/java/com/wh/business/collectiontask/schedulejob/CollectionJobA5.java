@@ -176,7 +176,7 @@ public class CollectionJobA5 implements InterruptableJob {
                     } catch (HttpStatusException | SocketTimeoutException ignore) {
 
                     } catch (Exception exception) {
-                        String stackTraces = Arrays.asList(exception.getStackTrace()).stream().map(Object::toString).collect(Collectors.joining(", "));
+                        String stackTraces = Arrays.asList(exception.getStackTrace()).stream().map(Object::toString).collect(Collectors.joining("\n "));
                         log.error(detailTaskUrl);
                         log.error(exception);
                         log.error(stackTraces);

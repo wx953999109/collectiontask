@@ -72,7 +72,7 @@ public class CodeGenerator {
         dsc.setUrl("jdbc:mysql://127.0.0.1:3306/collectiontask?useUnicode=true&useSSL=false&characterEncoding=utf8");
         dsc.setDriverName("com.mysql.cj.jdbc.Driver");
         dsc.setUsername("root");
-        dsc.setPassword("root");
+        dsc.setPassword("Wuhao19920205!@#");
         mpg.setDataSource(dsc);
 
         // 包配置
